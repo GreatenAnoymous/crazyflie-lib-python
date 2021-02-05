@@ -169,7 +169,7 @@ def omega_dx(t):
 	r=0
 	Phi_g1=180
 	Phi_g3=180
-	omega_max=710/0.52
+	omega_max=720/0.52
 	gamma1=(1/omega_max)*Phi_g1
 	gamma3=(1/omega_max)*Phi_g3
 	beta1=-(3/4)*(1/gamma1**3)*omega_max
@@ -196,20 +196,31 @@ def test_hover(cf,dt):
         time.sleep(dt)
     
 
-def flip360_rate(cf,t,dt):
+def flip360_rate(cf,t,dt,lg):
     n=int(t/dt)
+    num_oscillate=0
+    s=1
     for i in range(0,n):
         ti=i*dt
+        last_omega=0
         if ti<=0.52:
             rate=[0,omega_dx(ti),0]
             if ti<=0.26:
                 cf.commander.send_angular_velocity_setpoint(rate[0],rate[1],rate[2],32767)
             else:
                 cf.commander.send_angular_velocity_setpoint(rate[0],rate[1],rate[2],32767)
+                last_omega=lg.wy
         #cf.send_full_state_setpoint(r,v,a,rpy,rate)
             time.sleep(dt) 
         else:   #re-stablization!
-            cf.commander.send_angular_velocity_setpoint(0,0,0,39767)
+          #  if s!=np.sign(lg.wy-last_omega):
+           #     num_oscillate=num_oscillate+1
+           #     s=np.sign(lg.wy-last_omega)
+         #   last_omega=lg.wy
+          #  print(num_oscillate,lg.pitch,lg.wy)
+          #  if abs(lg.wy)<=10 and abs(lg.pitch)<=10:# and num_oscillate>=4:
+          #      break
+            cf.commander.send_angular_velocity_setpoint(0,0,0,50767)
             time.sleep(dt) 
    
 
@@ -277,7 +288,7 @@ def flip360(cf,t,dt):
     
 def test_angular(cf,dt):
    
-    hovering_z=0.5
+    hovering_z=0.4
     cf.commander.send_setpoint(0,0,0,0)
     time.sleep(dt)
     ts=2.0
@@ -295,26 +306,29 @@ def test_angular(cf,dt):
     tc=1.0
     n=int(tc/dt)
     for i in range(0,n):
-        cf.commander.send_hover_setpoint(0,0,0,hovering_z+1.2*i/n)
+        cf.commander.send_hover_setpoint(0,0,0,hovering_z+1.3*i/n)
         time.sleep(dt)
         
     lg=logger(cf)
     lg.log_omega()
-    flip360_rate(cf,0.52+0.2,dt)
+    flip360_rate(cf,0.52+0.8,dt,lg)
 
     
    
 
-    tr=1.0
-    n=int(tr/dt)
-    for i in range(0,n):
-        cf.commander.send_hover_setpoint(0,0,0,hovering_z)
-        time.sleep(dt)
+  #  tr=0.25
+   # n=int(tr/dt)
+   # vxi=lg.vx
+   # vyi=lg.vy
+    #for i in range(0,n+1):
+    #    cf.commander.send_hover_setpoint(vxi-vxi*i/n,vyi-vyi*i/n,0,hovering_z)
+    #    time.sleep(dt)
     #stablize(cf,tr,dt,lg)
    
-    th=2.0
+    th=3.0
     n=int(th/dt)
-    for i in range(0,n):
+    
+    for i in range(0,n+1):
         cf.commander.send_hover_setpoint(0,0,0,hovering_z)
         time.sleep(dt)
                 
